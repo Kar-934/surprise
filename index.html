@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Love Tap Game ❤️</title>
+<style>
+body {
+  margin: 0;
+  background: linear-gradient(to bottom, #ffe6f0, #ffccd5);
+  font-family: 'Comic Sans MS', cursive;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+#gameCanvas {
+  display: block;
+  margin-top: 20px;
+}
+button {
+  padding: 15px 25px;
+  margin-top: 15px;
+  font-size: 18px;
+  border: none;
+  border-radius: 10px;
+  background: #ff6699;
+  color: white;
+  cursor: pointer;
+}
+#loveMeter {
+  width: 300px;
+  height: 30px;
+  border-radius: 15px;
+  background: white;
+  margin-top: 10px;
+  overflow: hidden;
+}
+#loveFill {
+  height: 100%;
+  width: 0;
+  background: pink;
+  transition: width 0.2s;
+}
+#popup {
+  position: absolute;
+  top: 50px;
+  font-size: 24px;
+  color: #ff3366;
+  font-weight: bold;
+  display: none;
+  animation: pop 1s ease forwards;
+}
+@keyframes pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+#messageScreen {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 204, 230, 0.95);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+</style>
+</head>
+<body>
+<audio id="background-music" src="piano.mp3" loop></audio>
+
+<canvas id="gameCanvas" width="300" height="300"></canvas>
+<div id="loveMeter"><div id="loveFill"></div></div>
+<button id="tapBtn">Tap to Grow Love ❤️</button>
+<div id="popup"></div>
+<div id="messageScreen"></div>
+
+<script>
+// ----- Game Variables -----
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const loveFill = document.getElementById('loveFill');
+const popup = document.getElementById('popup');
+const messageScreen = document.getElementById('messageScreen');
+const tapBtn = document.getElementById('tapBtn');
+const backgroundMusic = document.getElementById('background-music');
+
+let love = 0;
+let figureIndex = 0;
+let musicStarted = false;
+const figures = ['🐰','🧸','❤️','🌸','🐱'];
+const quotes = [
+  "You are my sunshine ☀️",
+  "Forever & Always 💞",
+  "Every heartbeat is yours 💓",
+  "With you, everything blooms 🌷",
+  "You're my favorite person 🌟"
+];
+let particles = [];
+
+
+// ----- Draw Figure -----
+function drawFigure() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.font = "100px serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(figures[figureIndex], canvas.width/2, canvas.height/2);
+}
+
+// ----- Heart Particles -----
+function createParticle() {
+  particles.push({
+    x: canvas.width/2,
+    y: canvas.height/2 - 40,
+    size: Math.random() * 10 + 10,
+    speedY: Math.random() * 1 + 1,
+    alpha: 1
+  });
+}
+
+function updateParticles() {
+  for (let i = particles.length-1; i >= 0; i--) {
+    particles[i].y -= particles[i].speedY;
+    particles[i].alpha -= 0.02;
+    if (particles[i].alpha <= 0) {
+      particles.splice(i,1);
+    }
+  }
+}
+
+function drawParticles() {
+  ctx.font = "20px serif";
+  ctx.fillStyle = "rgba(255,0,100,0.8)";
+  particles.forEach(p => {
+    ctx.globalAlpha = p.alpha;
+    ctx.fillText("💖", p.x, p.y);
+    ctx.globalAlpha = 1;
+  });
+}
+
+// ----- Popup Surprise -----
+function showPopup() {
+  const texts = ["I love you ❤️", "Cutie 💕", "Hug me 🐻", "Sweetheart 🍭"];
+  popup.textContent = texts[Math.floor(Math.random()*texts.length)];
+  popup.style.left = (Math.random()*200+50) + "px";
+  popup.style.display = "block";
+  setTimeout(()=> popup.style.display="none", 1000);
+}
+
+// ----- Game Loop -----
+function gameLoop() {
+  drawFigure();
+  drawParticles();
+  updateParticles();
+  requestAnimationFrame(gameLoop);
+}
+gameLoop();
+
+// ----- Tap Logic -----
+tapBtn.addEventListener('click', () => {
+  // Play music on the very first tap
+  if (!musicStarted) {
+    backgroundMusic.play();
+    musicStarted = true;
+  }
+
+  love = Math.min(100, love+5);
+  loveFill.style.width = love + "%";
+  createParticle();
+  if (Math.random() < 0.3) showPopup();
+  if (love >= 100) {
+    setTimeout(()=> showMessageSequence(), 200);
+  }
+});
+
+// ----- Decay Love -----
+setInterval(()=> {
+  love = Math.max(0, love-1);
+  loveFill.style.width = love + "%";
+}, 500);
+
+// ----- Message Sequence -----
+function showMessageSequence() {
+  let index = 0;
+  messageScreen.style.display = "flex";
+  function nextMessage() {
+    if (index < quotes.length) {
+      messageScreen.textContent = quotes[index];
+      index++;
+      setTimeout(nextMessage, 3000); // 3 sec per message
+    } else {
+      messageScreen.style.display = "none";
+      resetGame();
+    }
+  }
+  nextMessage();
+}
+
+// ----- Reset -----
+function resetGame() {
+  love = 0;
+  loveFill.style.width = "0%";
+  figureIndex = (figureIndex+1) % figures.length;
+}
+
+</script>
+
+</body>
+</html>
